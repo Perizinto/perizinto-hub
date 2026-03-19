@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 </head>
 <body>
     <div id="auth-screen" style="display:none; position:fixed; inset:0; background:#f0f2f5; z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
@@ -56,7 +57,7 @@
 
     <div id="dropdown"><div class="dropdown-content">
         <h3>Add New Style</h3>
-        <label>Photo:</label> <input id="file" type="file" accept="image/*"/><br>
+        <label>Photo/Video:</label> <input id="file" type="file" accept="image/*,video/*"/><br>
         <label>Name:</label> <input id="letter" type="text" placeholder="e.g. Senator"/><br>
         <label>Price (₦):</label> <input id="price" type="number" placeholder="20000"/>
         <div id="measurement">
