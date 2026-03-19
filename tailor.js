@@ -30,13 +30,13 @@ async function handleAuth() {
     const email = document.getElementById('email-input').value;
     const pass = document.getElementById('pass-input').value;
     const brand = document.getElementById('brand-input').value;
-    const phone = document.getElementById('phone-input').value;
+    const phone = document.getElementById('phone-input').value.replace(/\D/g,''); // Sanitize phone numbers
     try {
         if (isSignUp) {
             const res = await auth.createUserWithEmailAndPassword(email, pass);
             await db.collection("tailors").doc(res.user.uid).set({ 
                 brandName: brand || "New Tailor",
-                phoneNumber: phone.replace(/\D/g,'') || "2340000000000"
+                phoneNumber: phone || "2340000000000"
             });
         } else {
             await auth.signInWithEmailAndPassword(email, pass);
@@ -62,7 +62,6 @@ function renderList(data) {
     let html = ""; let lowCount = 0;
     data.forEach(d => {
         if (d.qty <= 2) lowCount++;
-        // Display thumbnail even for videos in Admin for speed
         html += `<div class="stock">
             <button class="delete-btn" onclick="deleteDesign('${d.id}')"><i class="fas fa-trash"></i></button>
             <img src="${d.thumb || d.img}" class="stock-img" onclick="viewImage('${d.img}', '${d.type}')">
@@ -82,16 +81,16 @@ function renderList(data) {
     document.getElementById('low-stocks').innerText = lowCount;
 }
 
-// Helper to generate Video Thumbnail
 function generateThumbnail(file) {
     return new Promise((resolve) => {
         const video = document.createElement('video');
         video.src = URL.createObjectURL(file);
-        video.currentTime = 1; // Seek to 1 second
+        video.muted = true;
+        video.playsInline = true;
+        video.currentTime = 1;
         video.onloadeddata = () => {
             const canvas = document.createElement('canvas');
-            canvas.width = 300;
-            canvas.height = 300;
+            canvas.width = 300; canvas.height = 300;
             canvas.getContext('2d').drawImage(video, 0, 0, 300, 300);
             resolve(canvas.toDataURL('image/jpeg'));
         };
@@ -104,7 +103,7 @@ document.getElementById('btn1').onclick = async function() {
     const btn = document.getElementById('btn1');
     if (!file || !name) return alert("File/Name required!");
 
-    btn.innerText = "Processing... ⏳";
+    btn.innerText = "Uploading... ⏳";
     btn.disabled = true;
 
     try {
@@ -114,16 +113,18 @@ document.getElementById('btn1').onclick = async function() {
 
         if (fileType === 'video') {
             const storageRef = storage.ref(`designs/${auth.currentUser.uid}/${Date.now()}_video`);
-            const uploadTask = await storageRef.put(file);
+            // Fixed: Convert to blob for better Android 7 compatibility
+            const blob = new Blob([file], { type: file.type });
+            const uploadTask = await storageRef.put(blob);
             fileUrl = await uploadTask.ref.getDownloadURL();
-            thumbUrl = await generateThumbnail(file); // Capture first frame
+            thumbUrl = await generateThumbnail(file);
         } else {
             fileUrl = await new Promise(r => {
                 const reader = new FileReader();
                 reader.onload = e => r(e.target.result);
                 reader.readAsDataURL(file);
             });
-            thumbUrl = fileUrl; // For images, thumb is the same as img
+            thumbUrl = fileUrl;
         }
 
         await db.collection("designs").add({
@@ -134,34 +135,31 @@ document.getElementById('btn1').onclick = async function() {
             img: fileUrl, thumb: thumbUrl, type: fileType, qty: 1, ownerId: auth.currentUser.uid
         });
 
-        btn.innerText = "Upload 🚀";
-        btn.disabled = false;
-        closeModals();
+        btn.innerText = "Upload 🚀"; btn.disabled = false; closeModals();
     } catch (err) {
-        alert(err.message);
-        btn.innerText = "Upload 🚀";
-        btn.disabled = false;
+        alert("Error: " + err.message);
+        btn.innerText = "Upload 🚀"; btn.disabled = false;
     }
 };
 
 function copyCatalogLink() {
-    const uid = auth.currentUser.uid;
-    const link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${uid}`;
-    navigator.clipboard.writeText(link).then(() => alert("Catalog link copied!"));
+    const link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${auth.currentUser.uid}`;
+    navigator.clipboard.writeText(link).then(() => alert("Link Copied!"));
 }
 
 function showQRModal() {
-    const uid = auth.currentUser.uid;
-    const link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${uid}`;
-    const qrUrl = `https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=${encodeURIComponent(link)}&choe=UTF-8`;
-    document.getElementById('qr-container').innerHTML = `<img id="qr-img" src="${qrUrl}">`;
+    const link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${auth.currentUser.uid}`;
+    // Optimized QR URL
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
+    document.getElementById('qr-container').innerHTML = `<img id="qr-img" src="${qrUrl}" style="display:block; margin:auto;">`;
     document.getElementById('qr-modal').style.display = 'flex';
 }
 
 function downloadQR() {
     const img = document.getElementById('qr-img');
+    if(!img) return alert("QR not ready!");
     const link = document.createElement('a');
-    link.href = img.src; link.download = "Shop_QR.png";
+    link.href = img.src; link.download = "My_Shop_QR.png";
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
@@ -194,11 +192,19 @@ window.reportError = () => {
 };
 
 window.viewImage = (src, type) => {
-    const modal = document.getElementById('image-modal');
-    modal.innerHTML = type === 'video' 
-        ? `<video src="${src}" controls autoplay style="max-width:95%; max-height:85%; border-radius:12px;"></video>`
-        : `<img src="${src}" style="max-width:95%; max-height:85%; border-radius:12px;">`;
-    modal.style.display = 'flex';
+    const content = document.getElementById('modal-content');
+    content.innerHTML = type === 'video' 
+        ? `<video src="${src}" controls autoplay playsinline style="max-width:100%; max-height:80vh; border-radius:12px;"></video>`
+        : `<img src="${src}" style="max-width:100%; max-height:80vh; border-radius:12px;">`;
+    document.getElementById('image-modal').style.display = 'flex';
+};
+
+window.searchDesigns = () => {
+    const term = document.getElementById('main-search').value.toLowerCase();
+    document.querySelectorAll('.stock').forEach(s => {
+        const name = s.querySelector('.dress-name').innerText.toLowerCase();
+        s.style.display = name.includes(term) ? "flex" : "none";
+    });
 };
 
 document.getElementById('open-sidebar').onclick = () => {
