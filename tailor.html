@@ -29,7 +29,7 @@
         <ul class="menu-links">
             <li onclick="toggleDarkMode()"><i class="fas fa-moon"></i> <span id="mode-text">Dark Mode</span></li>
             <li onclick="changeBrandName()"><i class="fas fa-edit"></i> <span>Change Brand</span></li>
-            <li onclick="copyCatalogLink()"><i class="fas fa-link"></i> <span>Copy Catalog Link</span></li>
+            <li onclick="copyCatalogLink()"><i class="fas fa-link"></i> <span>Copy Customer's Link</span></li>
             <li onclick="showQRModal()"><i class="fas fa-qrcode"></i> <span>My Shop QR</span></li>
             <li onclick="reportError()"><i class="fas fa-bug"></i> <span>Report Error</span></li>
             <li onclick="auth.signOut()" style="color: #ff4d4d; border-top: 1px solid #eee; margin-top: 20px;"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></li>
@@ -39,7 +39,7 @@
     <div id="qr-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:5000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; padding:25px; border-radius:20px; text-align:center; max-width:300px;">
             <h3>Shop QR Code</h3>
-            <div id="qr-container" style="margin:20px 0;"></div>
+            <div id="qr-container" style="margin:20px 0; min-height: 200px; display: flex; align-items: center; justify-content: center; border: 1px dashed #ccc;"></div>
             <button onclick="downloadQR()" style="background:#111; color:#fff; padding:12px 20px; border-radius:10px; border:none; cursor:pointer; width:100%;">Download QR</button>
             <p onclick="closeQRModal()" style="margin-top:15px; cursor:pointer; color:#666;">Close</p>
         </div>
@@ -67,7 +67,7 @@
         </div>
         <div id="buttons"><button onclick="closeModals()">Cancel ❌</button><button id="btn1">Upload 🚀</button></div>
     </div></div>
-    <div id="image-modal" onclick="this.style.display='none'"><img src="" id="full-glory-img"></div>
+    <div id="image-modal" onclick="this.style.display='none'"><div id="modal-content"></div></div>
     <div id="overlay"></div>
     <script src='tailor.js'></script>
 </body>
