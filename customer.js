@@ -11,7 +11,7 @@ const db = firebase.firestore();
 
 const urlParams = new URLSearchParams(window.location.search);
 const ADMIN_UID = urlParams.get('id');
-let TAILOR_PHONE = "2340000000000";
+let TAILOR_PHONE = "";
 let favorites = JSON.parse(localStorage.getItem('user_favs')) || [];
 let allDesigns = [];
 let showOnlyFavs = false;
@@ -19,12 +19,13 @@ let showOnlyFavs = false;
 if (!ADMIN_UID) {
     document.getElementById('catalog-list').innerHTML = "<h3 style='text-align:center;'>Tailor Link Invalid.</h3>";
 } else {
-    db.collection("tailors").doc(ADMIN_UID).onSnapshot(doc => {
+    // Immediate Brand Loading
+    db.collection("tailors").doc(ADMIN_UID).get().then(doc => {
         if (doc.exists) {
             const data = doc.data();
             document.getElementById('side-brand').innerText = data.brandName;
             document.getElementById('main-title').innerText = data.brandName;
-            TAILOR_PHONE = data.phoneNumber;
+            TAILOR_PHONE = data.phoneNumber.replace(/\D/g,''); // Sanitize
         }
     });
 
@@ -34,14 +35,9 @@ if (!ADMIN_UID) {
     });
 }
 
-function applyFilters() {
-    let filtered = showOnlyFavs ? allDesigns.filter(d => favorites.includes(d.id)) : allDesigns;
-    renderCatalog(filtered);
-}
-
 function renderCatalog(data) {
     const list = document.getElementById('catalog-list');
-    list.innerHTML = "";
+    list.innerHTML = data.length ? "" : "<p style='text-align:center;'>No styles found.</p>";
     data.forEach(d => {
         const card = document.createElement('div');
         card.className = "stock"; card.style.position = "relative";
@@ -66,11 +62,18 @@ function renderCatalog(data) {
     document.getElementById('fav-badge').innerText = favorites.length;
 }
 
-function filterFavs(status) {
-    showOnlyFavs = status;
-    applyFilters();
-    toggleSidebar();
+function shareShop() {
+    const shareData = { title: document.getElementById('main-title').innerText, text: 'Check out my catalog!', url: window.location.href };
+    if (navigator.share) navigator.share(shareData);
+    else { alert("Link copied to clipboard!"); navigator.clipboard.writeText(window.location.href); }
 }
+
+function applyFilters() {
+    let filtered = showOnlyFavs ? allDesigns.filter(d => favorites.includes(d.id)) : allDesigns;
+    renderCatalog(filtered);
+}
+
+function filterFavs(status) { showOnlyFavs = status; applyFilters(); toggleSidebar(); }
 
 function sortPrice() {
     const val = document.getElementById('price-filter').value;
@@ -90,8 +93,8 @@ function toggleSidebar() { document.getElementById('sidebar').classList.toggle('
 function viewMedia(src, type) {
     const modal = document.getElementById('image-modal');
     modal.innerHTML = type === 'video' 
-        ? `<video src="${src}" controls autoplay style="max-width:95%; max-height:85%; border-radius:12px;"></video>`
-        : `<img src="${src}" style="max-width:95%; max-height:85%; border-radius:12px;">`;
+        ? `<video src="${src}" controls autoplay playsinline style="max-width:100%; max-height:80vh; border-radius:12px;"></video>`
+        : `<img src="${src}" style="max-width:100%; max-height:80vh; border-radius:12px;">`;
     modal.style.display = 'flex';
 }
 
@@ -100,8 +103,13 @@ function toggleTheme() {
     document.getElementById('mode-text-cust').innerText = isDark ? "Light Mode" : "Dark Mode";
 }
 
-function chatWithTailor() { window.open(`https://wa.me/${TAILOR_PHONE}`); }
+function chatWithTailor() { 
+    if(!TAILOR_PHONE) return alert("WhatsApp number not set!");
+    window.open(`https://wa.me/${TAILOR_PHONE}`); 
+}
+
 function placeOrder(name, price) { 
+    if(!TAILOR_PHONE) return alert("WhatsApp number not set!");
     const text = encodeURIComponent(`I want to order: ${name} (₦${price})`);
     window.open(`https://wa.me/${TAILOR_PHONE}?text=${text}`); 
 }
