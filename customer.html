@@ -2,35 +2,226 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Style Catalog</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 40 C35 20, 65 20, 80 40 C90 55, 85 75, 70 80' stroke='%23FFD700' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cline x1='40' y1='35' x2='65' y2='65' stroke='%2325D366' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='65' y1='35' x2='40' y2='65' stroke='%2325D366' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='50' r='4' fill='%23FFD700'/%3E%3Ccircle cx='30' cy='70' r='10' fill='none' stroke='%2325D366' stroke-width='4'/%3E%3Ccircle cx='74' cy='70' r='10' fill='none' stroke='%2325D366' stroke-width='4'/%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Fashion Hub | Perizinto Labs</title>
+    <meta property="og:title" content="Fashion Hub">
+    <meta property="og:description" content="Browse exclusive tailor-made designs">
+    <meta property="og:image" content="https://res.cloudinary.com/dsqn7mwko/image/upload/v1744756800/fashion-hub-og.jpg">
     <link rel="stylesheet" href="tailor.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        .order-btn-full { background: #25D366; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .heart-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; width: 35px; height: 35px; border-radius: 50%; color: var(--danger); font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        /* ----- CUSTOMER OVERRIDES (scoped to body.customer-view) ----- */
+        body.customer-view {
+            --primary: #007bff; --whatsapp: #25D366; --gold: #FFD700;
+            background: #f9f9f9; margin: 0; padding-top: 190px;
+            font-family: 'Inter', sans-serif; transition: 0.3s;
+        }
+        body.customer-view.dark-mode { background: #121212; color: #fff; }
+        
+        /* Sticky Header – restored original styling */
+        body.customer-view .sticky-header {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding-bottom: 5px;
+        }
+        body.customer-view.dark-mode .sticky-header { background: #1a1a1a; border-bottom: 1px solid #333; }
+        
+        body.customer-view .search-box {
+            width: 100%; padding: 12px 15px; border-radius: 25px;
+            border: 1px solid #eee; background: #f5f5f5; font-size: 14px;
+            margin-bottom: 5px;
+        }
+        body.customer-view.dark-mode .search-box { background: #222; border-color: #444; color: white; }
+        
+        body.customer-view .filter-bar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            padding: 8px 15px; overflow-x: auto; scrollbar-width: none;
+        }
+        body.customer-view .filter-bar::-webkit-scrollbar { display: none; }
+        body.customer-view .chip {
+            padding: 6px 16px; border-radius: 20px; border: 1px solid #ddd;
+            font-size: 13px; cursor: pointer; background: white; color: #333;
+            white-space: nowrap;
+        }
+        body.customer-view.dark-mode .chip { background: #2c2c2c; border-color: #444; color: #fff; }
+        body.customer-view .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* Catalog – two‑column grid on desktop, single column on mobile */
+        body.customer-view .catalog-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            padding: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) {
+            body.customer-view .catalog-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Horizontal card inside each grid cell */
+        body.customer-view .design-card {
+            background: white; border-radius: 15px; padding: 12px;
+            display: flex; gap: 12px; align-items: stretch;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            position: relative; border: 1px solid #eee;
+            height: fit-content;
+        }
+        body.customer-view.dark-mode .design-card { background: #1e1e1e; border-color: #333; }
+        
+        body.customer-view .design-card .image-wrapper {
+            position: relative; flex-shrink: 0; width: 110px; height: 140px;
+            cursor: zoom-in; border-radius: 10px; overflow: hidden;
+            background: #f0f0f0;
+        }
+        body.customer-view.dark-mode .design-card .image-wrapper { background: #2a2a2a; }
+        body.customer-view .card-img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        
+        body.customer-view .badge-limited {
+            position: absolute; bottom: 8px; left: 8px; background: #e74c3c;
+            color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;
+        }
+        body.customer-view .video-indicator {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: rgba(0,0,0,0.6); color: white; width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; z-index: 5; border: 2px solid white;
+        }
+        
+        /* Heart & Share icons – repositioned to avoid overlap */
+        body.customer-view .icon-btn {
+            position: absolute; top: 6px; background: rgba(255,255,255,0.9);
+            border: none; border-radius: 50%; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-size: 14px; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        body.customer-view.dark-mode .icon-btn { background: rgba(0,0,0,0.7); color: white; }
+        body.customer-view .btn-heart { left: 6px; }
+        body.customer-view .btn-share { right: 6px; }
+        
+        body.customer-view .card-details {
+            flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 2px 0; overflow: hidden;
+        }
+        body.customer-view .card-title {
+            font-size: 1rem; font-weight: bold; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        body.customer-view .card-price {
+            font-size: 1rem; font-weight: 600; color: var(--primary); margin-bottom: 6px;
+            display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        body.customer-view .service-badge {
+            display: inline-block; background: #f0f0f0; color: #555;
+            padding: 2px 8px; border-radius: 12px; font-size: 10px;
+        }
+        body.customer-view .order-btn {
+            width: 100%; padding: 8px; background: var(--whatsapp); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 8px; font-size: 12px;
+        }
+        body.customer-view .order-btn:disabled { background: #aaa; cursor: not-allowed; }
+        body.customer-view .spec-btn {
+            background: none; border: 1px solid #ddd; padding: 6px; border-radius: 6px;
+            font-size: 11px; cursor: pointer; width: 100%; display: flex;
+            align-items: center; justify-content: center; gap: 4px; margin-top: 6px;
+        }
+        body.customer-view.dark-mode .spec-btn { border-color: #444; color: #ccc; }
+        
+        /* Modal & Sidebar */
+        body.customer-view .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
+        body.customer-view .modal-content { background: white; border-radius: 15px; padding: 25px; max-width: 450px; width: 100%; max-height: 80vh; overflow-y: auto; }
+        body.customer-view.dark-mode .modal-content { background: #222; color: #fff; }
+        body.customer-view .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #888; }
+        body.customer-view .sidebar { position: fixed; left: -320px; top: 0; width: 280px; height: 100%; background: white; z-index: 1000; transition: left 0.4s; padding: 30px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+        body.customer-view.dark-mode .sidebar { background: #1a1a1a; }
+        body.customer-view .sidebar.active { left: 0; }
+        body.customer-view .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+        body.customer-view .sidebar-item { padding: 16px 0; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+        body.customer-view.dark-mode .sidebar-item { border-bottom-color: #333; }
+        body.customer-view .sidebar h2 { margin: 0 0 5px; font-size: 1.5rem; }
+        body.customer-view .sidebar p { margin: 0 0 20px; color: #888; font-size: 14px; }
+        body.customer-view #global-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        body.customer-view .chat-fab { position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; background: var(--whatsapp); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 5px 15px rgba(37,211,102,0.4); z-index: 90; cursor: pointer; }
+        body.customer-view .currency-symbol { font-family: 'Arial', sans-serif; margin-right: 2px; }
+        
+        /* Measurement modal boxes */
+        body.customer-view .measurement-box-container { display: flex; flex-direction: column; gap: 6px; }
+        body.customer-view .measurement-box-row { display: flex; justify-content: space-between; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 8px 12px; }
+        body.customer-view .measurement-value { font-family: monospace; font-weight: 700; color: var(--primary); }
+        
+        /* View all button */
+        body.customer-view .view-all-btn {
+            grid-column: 1 / -1; background: var(--primary); color: white; border: none;
+            padding: 15px; border-radius: 30px; font-weight: bold; cursor: pointer; text-align: center;
+        }
     </style>
 </head>
-<body>
-    <header class="top-header">
-        <h2 id="brand-title">Loading Catalog...</h2>
-        <i class="fas fa-moon" style="font-size: 20px; cursor: pointer;" onclick="toggleCustomerTheme()"></i>
-    </header>
+<body class="customer-view">
+<div id="global-loader"><div class="loader-spinner"></div><p id="loader-text" style="margin-top:20px;">LOADING STYLES...</p></div>
 
-    <div class="search-container" style="margin-top: 15px;">
-        <input type="text" id="cust-search" class="search-box" placeholder="Search styles...">
+<!-- Lightbox Modal -->
+<div id="lightbox-modal" class="modal" onclick="closeLightbox()">
+    <span class="close-modal" style="color:white; font-size:35px;">&times;</span>
+    <div id="lightbox-content" onclick="event.stopPropagation()"></div>
+</div>
+
+<div id="ui-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('ui-modal')">&times;</span>
+        <h3 id="modal-title"></h3><div id="modal-body"></div>
     </div>
+</div>
 
-    <main class="catalog-list" id="customer-list"></main>
-
-    <div id="lightbox" class="lightbox">
-        <div class="lightbox-close" onclick="closeLightbox()">&times;</div>
-        <img id="lightbox-img" src="">
-        <div id="lightbox-video-container" style="width:100%; max-width:600px; display:none;"></div>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+    <h2 id="side-brand">Fashion Hub</h2>
+    <p>Lead Designer</p>
+    <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+    <div class="sidebar-item" onclick="openUserGuide()"><i class="fas fa-book-open" style="color:var(--primary);"></i> User Guide</div>
+    <div class="sidebar-item" onclick="orderCustom()"><i class="fas fa-pen-nib" style="color:#e67e22;"></i> Order Custom Design</div>
+    <div class="sidebar-item" onclick="shareHub()"><i class="fas fa-share-nodes" style="color:#27ae60;"></i> Invite to Hub</div>
+    <div class="sidebar-item" onclick="toggleCustomerTheme()"><i class="fas fa-moon" style="color:#34495e;"></i> Switch Theme</div>
+    <div class="sidebar-item" onclick="reportIssue()"><i class="fas fa-headset" style="color:#e74c3c;"></i> Report Issue</div>
+    <div style="position:absolute; bottom:30px; left:20px; right:20px; padding:15px; background:#f4f4f4; border-radius:12px; text-align:center;" onclick="window.open('https://wa.me/2347068521773')">
+        <p style="margin:0; font-weight:bold;">Want a Professional Hub?</p>
+        <p style="font-size:11px; color:#888;">Let's build your vision. ⚡</p>
+        <p style="font-size:10px; color:#aaa;">Powered by Perizinto Labs</p>
     </div>
+</div>
 
-    <script src="customer.js"></script>
+<header class="sticky-header">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px 5px;">
+        <i class="fas fa-bars" style="font-size:22px; cursor:pointer;" onclick="toggleSidebar()"></i>
+        <div style="text-align:center;">
+            <p id="time-greeting" style="font-size:10px; color:var(--primary); margin:0; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;"></p>
+            <h2 id="brand-title" style="margin:0; font-size:1.3rem; font-weight:600;">Fashion Hub</h2>
+        </div>
+        <div onclick="toggleWishlist()" style="position:relative; cursor:pointer;">
+            <i class="fas fa-heart" id="header-heart" style="font-size:24px; color:#ccc;"></i>
+            <span id="fav-count" style="position:absolute; top:-5px; right:-8px; background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:10px; font-weight:bold;">0</span>
+        </div>
+    </div>
+    <div style="padding:0 15px;"><input type="text" id="cust-search" class="search-box" placeholder="Search styles, fabrics, or names..."></div>
+    <div class="filter-bar" id="category-bar"></div>
+    <div class="filter-bar" id="price-bar">
+        <div class="chip" onclick="filterData('< 15k',this)"><span class="currency-symbol">₦</span> &lt;15k</div>
+        <div class="chip" onclick="filterData('15k - 50k',this)"><span class="currency-symbol">₦</span>15k - 50k</div>
+        <div class="chip" onclick="filterData('> 50k',this)"><i class="fas fa-gem" style="color:var(--gold);"></i> <span class="currency-symbol">₦</span> &gt;50k</div>
+    </div>
+</header>
+
+<main class="catalog-list" id="customer-list"></main>
+
+<div class="chat-fab" onclick="chatWithDesigner()"><i class="fab fa-whatsapp"></i></div>
+<script src="customer.js"></script>
 </body>
 </html>
