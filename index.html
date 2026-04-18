@@ -2,22 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Hub - Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 40 C35 20, 65 20, 80 40 C90 55, 85 75, 70 80' stroke='%23FFD700' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cline x1='40' y1='35' x2='65' y2='65' stroke='%2325D366' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='65' y1='35' x2='40' y2='65' stroke='%2325D366' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='50' r='4' fill='%23FFD700'/%3E%3Ccircle cx='30' cy='70' r='10' fill='none' stroke='%2325D366' stroke-width='4'/%3E%3Ccircle cx='74' cy='70' r='10' fill='none' stroke='%2325D366' stroke-width='4'/%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>My Hub</title>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <link rel="stylesheet" href="tailor.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <style>
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      .loader-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #DAA520; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-      .edit-btn { position: absolute; top: 8px; left: 8px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; width: 32px; height: 32px; color: #333; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center; }
-      .qr-img-box { width: 100%; max-width: 250px; margin: 20px auto; border: 10px solid white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-      .support-btn { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
-      .btn-wa { background: #25D366; } .btn-email { background: #ea4335; }
-    </style>
 </head>
 <body>
     <div id="auth-screen" class="auth-screen">
@@ -46,8 +40,10 @@
 
     <header class="top-header">
         <i class="fas fa-bars" style="font-size: 20px; cursor: pointer;" onclick="toggleSidebar()"></i>
-        <h2 id="brand-name">My Hub - Admin</h2>
-        <span id="top-tier-text" style="font-size: 10px; font-weight: bold; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">FREE</span>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <h2 id="brand-name">My Hub - Admin</h2>
+            <span id="top-tier-badge" style="font-size: 16px;"></span>
+        </div>
         <button class="btn-dark" onclick="showAddModal()">+ Add</button>
     </header>
 
@@ -66,6 +62,8 @@
         </div>
     </div>
 
+    <div id="inventory-nudges"></div>
+
     <div class="search-container">
         <input type="text" id="admin-search" class="search-box" placeholder="Search styles...">
     </div>
@@ -77,11 +75,17 @@
         <div class="menu-item" onclick="toggleTheme()">
             <i class="fas fa-moon"></i> <span id="theme-text">Dark Mode</span>
         </div>
+        <div class="menu-item" onclick="openUserGuide()">
+            <i class="fas fa-book-open"></i> User Guide
+        </div>
         <div class="menu-item" onclick="changeBrandPrompt()">
             <i class="fas fa-edit"></i> Change Brand Name
         </div>
         <div class="menu-item" onclick="copyCustomerLink()">
             <i class="fas fa-link"></i> Copy Customer's Link
+        </div>
+        <div class="menu-item" onclick="viewAsCustomer()">
+            <i class="fas fa-eye"></i> View as Customer
         </div>
         <div class="menu-item" id="qr-menu-btn" onclick="openQRModal()">
             <i class="fas fa-qrcode"></i> My Shop QR
@@ -108,6 +112,7 @@
         </div>
     </nav>
 
+    <!-- ADD MODAL -->
     <div id="add-modal" class="bottom-sheet">
         <div class="sheet-header">
             <span>Add New Style</span>
@@ -122,27 +127,34 @@
                 <input type="text" id="name" placeholder="e.g. Senator">
             </div>
             <div class="input-group">
+                <label>Category:</label>
+                <input type="text" id="category" list="category-suggestions" placeholder="e.g. Kaftan, Senator...">
+                <datalist id="category-suggestions">
+                    <option value="Agbada"> <option value="Ankara"> <option value="Kaftan"> <option value="Senator">
+                    <option value="Native"> <option value="Shirts"> <option value="Suits"> <option value="Trousers">
+                    <option value="Underwears"> <option value="Iro and Buba"> <option value="Jalabia"> <option value="Kente">
+                    <option value="Lace"> <option value="Boubou"> <option value="Skirt and Blouse"> <option value="Jumpsuit">
+                </datalist>
+            </div>
+            <div class="input-group">
                 <label>Price (₦):</label>
                 <input type="number" id="price" placeholder="20000">
             </div>
             <div class="input-group">
-                <label>Video Link: <small id="video-lock-text" style="color:var(--danger); font-weight:normal;">(Premium Only)</small></label>
-                <input type="url" id="video-link" placeholder="YouTube Link" disabled>
+                <label>Service Type:</label>
+                <select id="service-type" style="padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
+                    <option value="Full Package">Full Package (Material + Sewing)</option>
+                    <option value="Sewing Only">Sewing Only (Labor)</option>
+                </select>
             </div>
-            <div class="measure-row">
-    <div class="input-group">
-        <label>Chest:</label>
-        <input type="number" id="edit-chest" placeholder='in"' style="width:100%;">
-    </div>
-    <div class="input-group">
-        <label>Neck:</label>
-        <input type="number" id="edit-neck" placeholder='in"' style="width:100%;">
-    </div>
-    <div class="input-group">
-        <label>Head:</label>
-        <input type="number" id="edit-head" placeholder='in"' style="width:100%;">
-    </div>
-</div>
+            <div class="input-group">
+                <label>Media Link: <small id="video-lock-text" style="color:var(--danger); font-weight:normal;">(Premium Only)</small></label>
+                <input type="url" id="media" placeholder="YouTube or direct video URL" disabled>
+            </div>
+            <div class="input-group">
+                <label>Style Measurements</label>
+                <input type="text" id="measurements-input" placeholder="e.g. Waist: 34, Length: 40">
+            </div>
         </div>
         <div class="sheet-footer">
             <button class="btn-cancel" onclick="closeModals()">Cancel ❌</button>
@@ -150,6 +162,7 @@
         </div>
     </div>
 
+    <!-- EDIT MODAL -->
     <div id="edit-modal" class="bottom-sheet">
         <div class="sheet-header">
             <span>Edit Style Details</span>
@@ -157,34 +170,43 @@
         </div>
         <div class="sheet-body">
             <input type="hidden" id="edit-id">
-            
-            <div class="input-group" style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <label style="color: var(--primary); font-weight: bold;">Update Design Photo:</label>
-                <input type="file" id="edit-file" accept="image/*" style="padding: 5px; font-size: 12px;">
+            <div class="input-group update-photo-group">
+                <label style="color: var(--primary); font-weight: bold; margin-bottom: 5px;">Update Design Photo:</label>
+                <input type="file" id="edit-file" accept="image/*" style="padding: 10px; border: 2px dashed #ccc; background: transparent;">
                 <small style="color: #888; display: block; margin-top: 4px;">Leave empty to keep current photo</small>
             </div>
-
             <div class="input-group">
                 <label>Name:</label>
                 <input type="text" id="edit-name" placeholder="e.g. Senator">
             </div>
             <div class="input-group">
+                <label>Category:</label>
+                <input type="text" id="edit-category" list="category-suggestions-edit" placeholder="e.g. Kaftan, Senator...">
+                <datalist id="category-suggestions-edit">
+                    <option value="Agbada"> <option value="Ankara"> <option value="Kaftan"> <option value="Senator">
+                    <option value="Native"> <option value="Shirts"> <option value="Suits"> <option value="Trousers">
+                    <option value="Underwears"> <option value="Iro and Buba"> <option value="Jalabia"> <option value="Kente">
+                    <option value="Lace"> <option value="Boubou"> <option value="Skirt and Blouse"> <option value="Jumpsuit">
+                </datalist>
+            </div>
+            <div class="input-group">
                 <label>Price (₦):</label>
                 <input type="number" id="edit-price" placeholder="20000">
             </div>
-            <div class="measure-row">
-                <div class="input-group" style="flex:1;">
-                    <label>Chest:</label>
-                    <input type="number" id="edit-chest" placeholder='in"'>
-                </div>
-                <div class="input-group" style="flex:1;">
-                    <label>Neck:</label>
-                    <input type="number" id="edit-neck" placeholder='in"'>
-                </div>
-                <div class="input-group" style="flex:1;">
-                    <label>Head:</label>
-                    <input type="number" id="edit-head" placeholder='in"'>
-                </div>
+            <div class="input-group">
+                <label>Service Type:</label>
+                <select id="edit-service-type" style="padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
+                    <option value="Full Package">Full Package (Material + Sewing)</option>
+                    <option value="Sewing Only">Sewing Only (Labor)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Media Link: <small>(YouTube or direct video URL)</small></label>
+                <input type="url" id="edit-media" placeholder="YouTube or direct video URL">
+            </div>
+            <div class="input-group">
+                <label>Style Measurements</label>
+                <input type="text" id="edit-measurements" placeholder="e.g. Waist: 34, Length: 40">
             </div>
         </div>
         <div class="sheet-footer">
@@ -194,45 +216,25 @@
     </div>
 
     <div id="qr-modal" class="bottom-sheet" style="text-align: center;">
-        <div class="sheet-header">
-            <span>Your Shop QR Code</span>
-            <i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i>
-        </div>
-        <div class="sheet-body">
-            <p style="font-size: 14px; color: #555;">Let customers scan this to view your catalogue instantly!</p>
-            <img id="qr-img" class="qr-img-box" src="" alt="Loading QR Code...">
-        </div>
-        <div class="sheet-footer">
-            <button class="btn-dark" style="width: 100%;" onclick="downloadQR()">Download QR 📥</button>
-        </div>
+        <div class="sheet-header"><span>Your Shop QR Code</span><i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i></div>
+        <div class="sheet-body"><p style="font-size: 14px; color: #555;">Let customers scan this to view your catalogue instantly!</p><img id="qr-img" class="qr-img-box" src="" alt="Loading QR Code..."></div>
+        <div class="sheet-footer"><button class="btn-dark" style="width: 100%;" onclick="downloadQR()">Download QR 📥</button></div>
     </div>
 
     <div id="about-modal" class="bottom-sheet">
-        <div class="sheet-header">
-            <span>About Perizinto Hub</span>
-            <i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i>
-        </div>
-        <div class="sheet-body" style="font-size: 14px; color: #444; line-height: 1.5;">
-            <p><b>Perizinto Hub</b> is a digital catalogue manager built specifically for modern tailors and fashion designers.</p>
-            <p>Instead of sending blurry pictures on WhatsApp, this app lets you create a professional online shop link. Your customers can view your designs, check prices, and see measurements in full HD.</p>
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
-            <h4 style="color: #DAA520; margin-bottom: 5px;"><i class="fas fa-crown"></i> Why Go Premium?</h4>
-            <ul style="padding-left: 20px; margin-top: 0;">
-                <li><b>Unlimited Uploads:</b> Break free from the 10-design limit.</li>
-                <li><b>Video Portfolios:</b> Add YouTube video links to show the fabric flow.</li>
-                <li><b>Direct QR Codes:</b> Generate a scan code for your physical shop wall.</li>
-                <li><b>Quick Edit:</b> Update prices and sizes on the fly.</li>
-            </ul>
+        <div class="sheet-header"><span>About Perizinto Hub</span><i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i></div>
+        <div class="sheet-body" style="font-size: 15px; color: #444; line-height: 1.6;">
+            <p>Welcome to <b>Perizinto Hub!</b> 🚀</p>
+            <p><b>What is this?</b><br>Your personal, professional online shop – share one link instead of endless photos.</p>
+            <p><b>How does it help?</b></p><ul><li>Look professional</li><li>Never lose measurements</li></ul>
+            <hr><h4 style="color: #DAA520;"><i class="fas fa-crown"></i> Why Go Premium?</h4><ul><li>Unlimited designs</li><li>Video links</li><li>QR Code</li></ul>
         </div>
     </div>
 
     <div id="support-modal" class="bottom-sheet">
-        <div class="sheet-header">
-            <span>Need Help?</span>
-            <i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i>
-        </div>
+        <div class="sheet-header"><span>Need Help?</span><i class="fas fa-times" onclick="closeModals()" style="cursor:pointer; color:var(--danger);"></i></div>
         <div class="sheet-body" style="text-align: center;">
-            <p style="margin-bottom: 20px; color: #555;">How would you like to contact our support team?</p>
+            <p style="margin-bottom:20px;">How would you like to contact support?</p>
             <button class="support-btn btn-wa" onclick="contactWhatsApp()"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</button>
             <button class="support-btn btn-email" onclick="contactEmail()"><i class="fas fa-envelope"></i> Send an Email</button>
         </div>
@@ -240,17 +242,14 @@
 
     <div id="lightbox" class="lightbox">
         <div class="lightbox-close" onclick="closeLightbox()">&times;</div>
-        <img id="lightbox-img" src="">
-        <div id="lightbox-video-container" style="width:100%; max-width:600px; display:none;"></div>
+        <div id="lightbox-content" style="width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; touch-action: none; overflow: hidden;"></div>
     </div>
 
     <div id="overlay" class="overlay" onclick="closeModals()"></div>
 
-    <div id="global-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: sans-serif;">
-        <div class="loader-spinner"></div>
-        <p id="loader-text" style="margin-top:20px; font-weight:bold; letter-spacing:1px;">PROCESSING...</p>
+    <div id="global-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; flex-direction:column; align-items:center; justify-content:center; color:white;">
+        <div class="loader-spinner"></div><p id="loader-text" style="margin-top:20px;">PROCESSING...</p>
     </div>
-
     <script src="tailor.js"></script>
 </body>
-        </html>
+    </html>
