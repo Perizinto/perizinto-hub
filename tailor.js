@@ -224,10 +224,10 @@ function handleTouchMove(e) {
 }
 //  END LIGHTBOX
 
-window.copyCustomerLink = () => { navigator.clipboard.writeText(`https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${auth.currentUser.uid}`); alert("Link Copied!"); closeModals(); };
-window.viewAsCustomer = () => { let u = auth.currentUser; if (u) window.open(`customer.html?id=${u.uid}`, '_blank'); else alert("Login first."); };
+window.copyCustomerLink = () => { navigator.clipboard.writeText(`https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/shop.html?id=${auth.currentUser.uid}`); alert("Link Copied!"); closeModals(); };
+window.viewAsCustomer = () => { let u = auth.currentUser; if (u) window.open(`shop.html?id=${u.uid}`, '_blank'); else alert("Login first."); };
 window.changeBrandPrompt = () => { let cur = document.getElementById('brand-name').innerText, n = prompt("New Brand Name:", cur); if (n && n !== cur) { showLoader(); db.collection("tailors").doc(auth.currentUser.uid).update({ brandName: n }).then(() => { alert("Updated!"); closeModals(); }).finally(() => hideLoader()); } else closeModals(); };
-window.openQRModal = () => { if (!isUserPremium) return alert("Premium required."); let link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/customer.html?id=${auth.currentUser.uid}`; document.getElementById('qr-img').src = `https://quickchart.io/qr?text=${encodeURIComponent(link)}&size=300`; document.getElementById('sidebar').classList.remove('active'); document.getElementById('qr-modal').classList.add('show'); };
+window.openQRModal = () => { if (!isUserPremium) return alert("Premium required."); let link = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/shop.html?id=${auth.currentUser.uid}`; document.getElementById('qr-img').src = `https://quickchart.io/qr?text=${encodeURIComponent(link)}&size=300`; document.getElementById('sidebar').classList.remove('active'); document.getElementById('qr-modal').classList.add('show'); };
 window.downloadQR = async () => { try { let r = await fetch(document.getElementById('qr-img').src); let b = await r.blob(); let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'MyShopQR.png'; a.click(); } catch (e) { alert('Screenshot instead.'); } };
 window.showAboutModal = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('about-modal').classList.add('show'); };
 window.showSupportModal = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('support-modal').classList.add('show'); };
