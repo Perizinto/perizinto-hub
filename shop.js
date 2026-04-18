@@ -229,16 +229,23 @@ window.openUserGuide = () => {
 
 // UNIVERSAL SHARING
 window.universalShare = async (id, name, imageUrl) => {
-    const baseLink = window.location.href.split('&view=')[0].split('?view=')[0];
-    const link = `${baseLink}?id=${TAILOR_ID}&view=${id}`;
+  
+    const currentUrl = new URL(window.location.href);
+    
+    const link = new URL(currentUrl.origin + currentUrl.pathname);
+    
+    link.searchParams.set('id', TAILOR_ID);
+    link.searchParams.set('view', id);
+    
     const shareTitle = safe(name);
+    const finalLink = link.toString();
    
     if (navigator.share) {
         try {
             await navigator.share({
                 title: shareTitle,
                 text: `Check out this design: ${shareTitle}`,
-                url: link
+                url: finalLink
             });
             return;
         } catch (e) {
@@ -246,19 +253,18 @@ window.universalShare = async (id, name, imageUrl) => {
         }
     }
     
-    // Fallback
     const fallbackOptions = `
         <div style="display:flex; flex-direction:column; gap:12px;">
-            <button onclick="copyShareLink('${link}')" style="padding:14px; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button onclick="copyShareLink('${finalLink}')" style="padding:14px; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <i class="fas fa-copy"></i> Copy Link
             </button>
-            <button onclick="shareViaEmail('${shareTitle}', '${link}')" style="padding:14px; background:#ea4335; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button onclick="shareViaEmail('${shareTitle}', '${finalLink}')" style="padding:14px; background:#ea4335; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <i class="fas fa-envelope"></i> Share via Email
             </button>
-            <button onclick="shareViaWhatsApp('${shareTitle}', '${link}')" style="padding:14px; background:#25D366; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button onclick="shareViaWhatsApp('${shareTitle}', '${finalLink}')" style="padding:14px; background:#25D366; color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <i class="fab fa-whatsapp"></i> Share on WhatsApp
             </button>
-            <button onclick="shareViaInstagram('${shareTitle}', '${link}')" style="padding:14px; background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button onclick="shareViaInstagram('${shareTitle}', '${finalLink}')" style="padding:14px; background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:white; border:none; border-radius:8px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <i class="fab fa-instagram"></i> Share on Instagram
             </button>
         </div>
