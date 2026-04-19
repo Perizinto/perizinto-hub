@@ -8,7 +8,8 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(), auth = firebase.auth();
-const GITHUB_USERNAME = "Perizinto", REPO_NAME = "perizinto-hub";
+emailjs.init("zDScctBN1_ZHZBifz");
+const GITHUB_USERNAME = "Perizintolabs", REPO_NAME = "perizinto-hub";
 let isUserPremium = false;
 const CLOUDINARY_CLOUD_NAME = 'dsqn7mwko', CLOUDINARY_UPLOAD_PRESET = 'Perizinto_fashion_hub';
 
@@ -24,13 +25,76 @@ window.toggleAuthMode = () => {
     isSignUp = !isSignUp; document.getElementById('auth-title').innerText = isSignUp ? "Create Account" : "Tailor Login"; document.getElementById('auth-btn').innerText = isSignUp ? "Sign Up" : "Login"; document.getElementById('auth-switch').innerText = isSignUp ? "Back to Login" : "Create Account"; document.getElementById('brand-group').style.display = isSignUp ? "block" : "none"; document.getElementById('phone-group').style.display = isSignUp ? "block" : "none"; document.querySelector('.auth-links span[onclick="resetPassword()"]').style.display = isSignUp ? 'none' : 'inline'; document.getElementById('email-input').value = ''; document.getElementById('pass-input').value = ''; if (isSignUp) { document.getElementById('brand-input').value = ''; document.getElementById('phone-input').value = ''; }
 };
 window.togglePassword = () => { let p = document.getElementById('pass-input'), e = document.getElementById('toggle-pass'); if (p.type === "password") { p.type = "text"; e.classList.replace("fa-eye", "fa-eye-slash"); } else { p.type = "password"; e.classList.replace("fa-eye-slash", "fa-eye"); } };
+// Send welcome email to new tailor
+async function sendWelcomeEmail(userEmail, brandName, phoneNumber, tailorUID) {
+    const shopLink = `https://perizintolabs.github.io/perizinto-hub/shop.html?id=${tailorUID}`;
+    
+    const templateParams = {
+        to_email: userEmail,
+        brand_name: brandName,
+        phone: phoneNumber || "Not provided",
+        shop_link: shopLink
+    };
+
+    try {
+        await emailjs.send(
+            "service_e38wffh",
+            "template_7mp328a",
+            templateParams
+        );
+        console.log("Welcome email sent to", userEmail);
+    } catch (error) {
+        console.error("Email failed:", error);
+    }
+}
+
+async function notifyAdmin(newBrand, newEmail, newPhone) {
+    const templateParams = {
+        to_email: "perizintolabs@gmail.com",
+        brand_name: newBrand,
+        user_email: newEmail,
+        user_phone: newPhone || "Not provided",
+        signup_time: new Date().toLocaleString()
+    };
+
+    try {
+        await emailjs.send(
+            "service_e38wffh",
+            "template_7mp328a", // Create a separate template
+            templateParams
+        );
+    } catch (e) {
+        console.warn("Admin notification failed");
+    }
+}
 window.handleAuth = async () => {
     let email = document.getElementById('email-input').value, pass = document.getElementById('pass-input').value; if (!email || !pass) return alert("Email and Password required."); showLoader("AUTHENTICATING...");
     try {
         if (isSignUp) {
-            let phone = document.getElementById('phone-input').value; if (!phone) return alert("Phone number required."); let snap = await db.collection("tailors").where("phoneNumber", "==", phone).get(); if (!snap.empty) { hideLoader(); return alert("This phone number is already registered."); }
-            let res = await auth.createUserWithEmailAndPassword(email, pass); await db.collection("tailors").doc(res.user.uid).set({ brandName: document.getElementById('brand-input').value || "My Shop", phoneNumber: phone, isPremium: false });
-        } else { await auth.signInWithEmailAndPassword(email, pass); }
+          let phone = document.getElementById('phone-input').value;
+        if (!phone) return alert("Phone number required.");
+    
+        let snap = await db.collection("tailors").where("phoneNumber", "==", phone).get();
+        if (!snap.empty) {
+        hideLoader();
+        return alert("This phone number is already registered.");
+    }
+    
+        let res = await auth.createUserWithEmailAndPassword(email, pass);
+        let uid = res.user.uid;
+        let brandName = document.getElementById('brand-input').value || "My Shop";
+    
+        await db.collection("tailors").doc(uid).set({
+        brandName: brandName,
+        phoneNumber: phone,
+        isPremium: false
+    });
+    
+    // Send welcome email
+    sendWelcomeEmail(email, brandName, phone, uid);
+    notifyAdmin(brandName, email, phone);
+}
+         else { await auth.signInWithEmailAndPassword(email, pass); }
         document.getElementById('email-input').value = ""; document.getElementById('pass-input').value = ""; if (isSignUp) { document.getElementById('brand-input').value = ""; document.getElementById('phone-input').value = ""; }
     } catch (e) { alert(e.message); } finally { hideLoader(); }
 };
