@@ -102,17 +102,20 @@ function loadDashboard(uid) {
     db.collection("tailors").doc(uid).onSnapshot(doc => {
         if (doc.exists) {
             let d = doc.data(); isUserPremium = d.isPremium || false; document.getElementById('brand-name').innerText = d.brandName;
+            document.getElementById('side-brand').innerText = d.brandName;
+            adjustAdminBrandSize();
             let tier = document.getElementById('user-tier'), badge = document.getElementById('top-tier-badge'), up = document.getElementById('upgrade-btn'), qr = document.getElementById('qr-menu-btn'), media = document.getElementById('media'), status = document.getElementById('sidebar-premium-status'), days = document.getElementById('sidebar-days-count');
             if (isUserPremium) {
-                if (tier) { tier.innerText = "Premium"; tier.className = "tier-premium premium-badge-animated"; } if (badge) badge.innerHTML = "👑"; if (qr) qr.classList.remove('premium-lock'); if (media) media.disabled = false; if (up) up.style.display = "none"; if (status) status.style.display = "block";
+                if (tier) { tier.innerText = "Premium"; tier.className = "tier-premium premium-badge-animated"; } if (badge) badge.innerHTML = ""; if (qr) qr.classList.remove('premium-lock'); if (media) media.disabled = false; if (up) up.style.display = "none"; if (status) status.style.display = "block";
                 if (d.subscriptionExpiry && days) { let diff = d.subscriptionExpiry.toDate().getTime() - Date.now(); days.innerText = Math.ceil(diff / (1000 * 60 * 60 * 24)) + " days remaining"; days.style.color = diff <= 5 * 86400000 ? "#ff4d4d" : "#888"; }
             } else {
-                if (tier) { tier.innerText = "Free"; tier.className = "tier-free"; } if (badge) badge.innerHTML = "⚫"; if (qr) qr.classList.add('premium-lock'); if (media) { media.disabled = true; media.value = ""; } if (up) up.style.display = "block"; if (status) status.style.display = "none";
+                if (tier) { tier.innerText = "Free"; tier.className = "tier-free"; } if (badge) badge.innerHTML = ""; if (qr) qr.classList.add('premium-lock'); if (media) { media.disabled = true; media.value = ""; } if (up) up.style.display = "block"; if (status) status.style.display = "none";
             }
             renderDesigns(allDesigns);
         }
     });
     db.collection("designs").where("ownerId", "==", uid).onSnapshot(snap => { allDesigns = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderDesigns(allDesigns); if (!init) { hideLoader(); init = true; } });
+    
 }
 function renderInventoryNudges() {
     let c = document.getElementById('inventory-nudges'); if (!c) return; let pending = allDesigns.filter(d => d.pendingInquiries > 0); if (!pending.length) { c.innerHTML = ''; c.style.display = 'none'; return; }
@@ -230,7 +233,7 @@ window.openLightbox = (src, mediaLink) => {
         }
     } else {
         container.innerHTML = `<img id="lightbox-img" src="${src}" style="transform: translate(0px,0px) scale(1); transition: transform 0.1s ease-out; max-width:95%; max-height:85vh; border-radius:10px; cursor:grab;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect width=\'200\' height=\'200\' fill=\'%23ddd\'/%3E%3Ctext x=\'50%%\' y=\'50%%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\'%3E🖼️%3C/text%3E%3C/svg%3E';">`;
-        setupGestures();
+setupGestures();
     }
     modal.style.display = 'flex';
     document.addEventListener('keydown', handleLightboxEscape);
@@ -291,7 +294,7 @@ window.downloadQR = async () => { try { let r = await fetch(document.getElementB
 window.showAboutModal = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('about-modal').classList.add('show'); };
 window.showSupportModal = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('support-modal').classList.add('show'); };
 window.contactWhatsApp = () => window.open("https://wa.me/2347068521773?text=Hello%20Perizinto%20I%20would%20like%20to%20report%20an%20error%20in%20the%20hub.");
-window.contactEmail = () => window.open("mailto:perizinto384@gmail.com?subject=Report%20Hub%20Error");
+window.contactEmail = () => window.open("mailto:perizintolabs@gmail.com?subject=Report%20Hub%20Error");
 window.openUserGuide = () => {
     let guide = `<div style="font-size:14px;line-height:1.6;max-height:70vh;overflow-y:auto;"><strong>🧵 Welcome to Perizinto Hub – Your Online Fashion Shop</strong><br><br>This is <strong>your personal online catalogue</strong>. You share one simple link, and customers can see all your designs, prices, measurements, and order via WhatsApp – no need to send endless photos!<br><br><strong>📸 Adding a New Style</strong><br>1. Tap <strong>+ Add</strong>.<br>2. Choose a clear photo.<br>3. Give it a name (e.g. "Senator Wear").<br>4. (Optional) Pick a category – you can type anything, even "Owambe Special".<br>5. Set the price in Naira.<br>6. Choose <strong>Service Type</strong>: "Full Package" means you provide fabric + sewing; "Sewing Only" means customer brings fabric.<br>7. If you are Premium, you can add a YouTube or video link showing the fabric.<br>8. Enter measurements like <code>Waist: 34, Length: 40</code>. Use commas to separate multiple. measurements should be in inches<br>9. Tap <strong>Upload</strong> – it appears instantly!<br><br><strong>✏️ Managing Stock</strong><br>• Use the <strong>+/- buttons</strong> to reduce stock when you sell.<br>• If stock reaches 0, it shows "Out of Stock" to customers.<br>• Tap the pencil icon (Premium only) to edit anything.<br>• Tap the trash to delete permanently.<br><br><strong>🔔 Smart Inventory Nudge</strong><br>When customers click "Order on WhatsApp", we count it. If a style gets many inquiries but you haven't updated stock, a yellow alert appears. You can quickly mark it as sold in bulk – no more forgetting to update inventory!<br><br><strong>📤 Sharing Your Hub</strong><br>• <strong>Copy Customer's Link</strong> – Send this URL to anyone.<br>• <strong>My Shop QR</strong> – Print it for your physical shop; customers scan and browse.<br>• <strong>View as Customer</strong> – See exactly what your customers see.<br><br><strong>👑 Premium Benefits (Highly Recommended!)</strong><br>✨ <strong>Unlimited Designs</strong> – Free tier stops at 10. Premium lets you upload your entire portfolio.<br>🎥 <strong>Video Showcase</strong> – Add YouTube links so customers can watch the fabric move.<br>✏️ <strong>Edit Anytime</strong> – Change prices, photos, or measurements whenever you want.<br>📱 <strong>QR Code</strong> – Generate a professional QR code for your shop.<br><br>Upgrading is easy: tap "Upgrade to Premium" and you'll be guided to make a secure payment via WhatsApp. It's just 2,500 naira for a month<br><br><strong>❓ Need Help?</strong><br>Use "Report Error" in the side menu – we're here for you!</div>`;
     document.getElementById('sidebar').classList.remove('active'); document.getElementById('support-modal').classList.add('show'); document.getElementById('overlay').style.display = 'block';
@@ -301,5 +304,26 @@ window.openUserGuide = () => {
     let orig = window.closeModals;
     window.closeModals = function () { document.getElementById('sidebar').classList.remove('active'); document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('show')); document.getElementById('overlay').style.display = 'none'; if (window.originalSupport) { document.querySelector('#support-modal .sheet-header span').innerText = window.originalSupport.header; document.querySelector('#support-modal .sheet-body').innerHTML = window.originalSupport.body; } window.closeModals = orig; };
 };
+// Dynamic font sizing for admin brand name
+function adjustAdminBrandSize() {
+    const title = document.getElementById('brand-name');
+    if (!title) return;
+    
+    // Remove any previous shrink class
+    title.classList.remove('shrink');
+    
+    // Force a reflow to get accurate measurements
+    title.style.fontSize = '';
+    
+    // Check if the text is overflowing its container
+    if (title.scrollWidth > title.clientWidth) {
+        title.classList.add('shrink');
+    }
+}
+
+// Listen for window resize
+window.addEventListener('resize', () => {
+    setTimeout(adjustAdminBrandSize, 50);
+});
 window.payWithPaystack = () => { let u = auth.currentUser; if (!u) return alert("Login first."); let msg = encodeURIComponent(`Hello Perizinto! I want to upgrade my Hub to Premium. My email: ${u.email}. Please send payment details.`); window.open(`https://wa.me/2347068521773?text=${msg}`); };
 function upgradeToPremium(uid, ref) { let exp = new Date(); exp.setDate(exp.getDate() + 30); db.collection("tailors").doc(uid).update({ isPremium: true, subscriptionExpiry: firebase.firestore.Timestamp.fromDate(exp), lastPaymentRef: ref || "N/A", lastPaymentDate: firebase.firestore.FieldValue.serverTimestamp() }).then(() => { alert("Success! Premium Active 🚀"); location.reload(); }).catch(e => { hideLoader(); alert("Error. Contact support."); }); }
