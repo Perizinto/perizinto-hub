@@ -20,6 +20,9 @@
             font-family: 'Inter', sans-serif; transition: 0.3s;
         }
         body.customer-view.dark-mode { background: #121212; color: #fff; }
+        body.customer-view #brand-title.shrink {
+    font-size: 0.7rem !important;
+}
         
         /* Sticky Header – restored original styling */
         body.customer-view .sticky-header {
@@ -27,6 +30,16 @@
             background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             padding-bottom: 5px;
         }
+        body.customer-view #brand-title {
+    margin: 0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1.2rem;  /* Base size for short names */
+    max-width: 70vw;
+    line-height: 1.3;
+}
         body.customer-view.dark-mode .sticky-header { background: #1a1a1a; border-bottom: 1px solid #333; }
         
         body.customer-view .search-box {
@@ -141,7 +154,7 @@
         body.customer-view .modal-content { background: white; border-radius: 15px; padding: 25px; max-width: 450px; width: 100%; max-height: 80vh; overflow-y: auto; }
         body.customer-view.dark-mode .modal-content { background: #222; color: #fff; }
         body.customer-view .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #888; }
-        body.customer-view .sidebar { position: fixed; left: -320px; top: 0; width: 280px; height: 100%; background: white; z-index: 1000; transition: left 0.4s; padding: 30px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+        body.customer-view .sidebar { position: fixed; left: -320px; top: 0; width: 280px; height: 100%; background: white; z-index: 1000; transition: left 0.4s; padding: 30px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; }
         body.customer-view.dark-mode .sidebar { background: #1a1a1a; }
         body.customer-view .sidebar.active { left: 0; }
         body.customer-view .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
@@ -149,6 +162,35 @@
         body.customer-view.dark-mode .sidebar-item { border-bottom-color: #333; }
         body.customer-view .sidebar h2 { margin: 0 0 5px; font-size: 1.5rem; }
         body.customer-view .sidebar p { margin: 0 0 20px; color: #888; font-size: 14px; }
+        body.customer-view .sidebar-promo {
+    position: absolute;
+    bottom: 30px;
+    left: 20px;
+    right: 20px;
+    padding: 12px 10px;
+    background: #f4f4f4;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+}
+body.customer-view .sidebar-promo p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.3;
+}
+body.customer-view .sidebar-promo .promo-title {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 3px;
+}
+body.customer-view .sidebar-promo .promo-sub {
+    color: #888;
+    font-size: 10px;
+}
+body.customer-view .sidebar-promo .promo-powered {
+    color: #aaa;
+    font-size: 9px;
+}
         body.customer-view #global-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         body.customer-view .chat-fab { position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; background: var(--whatsapp); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 5px 15px rgba(37,211,102,0.4); z-index: 90; cursor: pointer; }
         body.customer-view .currency-symbol { font-family: 'Arial', sans-serif; margin-right: 2px; }
@@ -183,7 +225,7 @@
 
 <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 <div class="sidebar" id="sidebar">
-    <h2 id="side-brand">Fashion Hub</h2>
+    <h2 id="side-brand" style="font-size: 1.2rem">Fashion Hub</h2>
     <p>Lead Designer</p>
     <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
     <div class="sidebar-item" onclick="openUserGuide()"><i class="fas fa-book-open" style="color:var(--primary);"></i> User Guide</div>
@@ -191,11 +233,11 @@
     <div class="sidebar-item" onclick="shareHub()"><i class="fas fa-share-nodes" style="color:#27ae60;"></i> Invite to Hub</div>
     <div class="sidebar-item" onclick="toggleCustomerTheme()"><i class="fas fa-moon" style="color:#34495e;"></i> Switch Theme</div>
     <div class="sidebar-item" onclick="reportIssue()"><i class="fas fa-headset" style="color:#e74c3c;"></i> Report Issue</div>
-    <div style="position:absolute; bottom:30px; left:20px; right:20px; padding:15px; background:#f4f4f4; border-radius:12px; text-align:center;" onclick="window.open('https://wa.me/2347068521773')">
-        <p style="margin:0; font-weight:bold;">Want a Professional Hub?</p>
-        <p style="font-size:11px; color:#888;">Let's build your vision. ⚡</p>
-        <p style="font-size:10px; color:#aaa;">Powered by Perizinto Labs</p>
-    </div>
+    <div class="sidebar-promo" onclick="window.open('https://wa.me/2347068521773')">
+    <p class="promo-title">Want a Professional Hub?</p>
+    <p class="promo-sub">Let's build your vision. ⚡</p>
+    <p class="promo-powered">Powered by Perizinto Labs</p>
+</div>
 </div>
 
 <header class="sticky-header">
@@ -203,7 +245,7 @@
         <i class="fas fa-bars" style="font-size:22px; cursor:pointer;" onclick="toggleSidebar()"></i>
         <div style="text-align:center;">
             <p id="time-greeting" style="font-size:10px; color:var(--primary); margin:0; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;"></p>
-            <h2 id="brand-title" style="margin:0; font-size:1.3rem; font-weight:600;">Fashion Hub</h2>
+            <h2 id="brand-title">Fashion Hub</h2>
         </div>
         <div onclick="toggleWishlist()" style="position:relative; cursor:pointer;">
             <i class="fas fa-heart" id="header-heart" style="font-size:24px; color:#ccc;"></i>
@@ -223,5 +265,28 @@
 
 <div class="chat-fab" onclick="chatWithDesigner()"><i class="fab fa-whatsapp"></i></div>
 <script src="shop.js"></script>
+<script>
+  // Dynamic font sizing for brand title (customer view)
+function adjustBrandTitleSize() {
+    const title = document.getElementById('brand-title');
+    if (!title) return;
+    
+    // Reset to base size temporarily to measure
+    title.style.fontSize = '';
+    title.classList.remove('shrink');
+    
+    // Check if overflowing
+    if (title.scrollWidth > title.clientWidth) {
+        title.classList.add('shrink');
+    }
+}
+
+// Run after brand name is populated
+const observer = new MutationObserver(() => adjustBrandTitleSize());
+observer.observe(document.getElementById('brand-title'), { childList: true, characterData: true, subtree: true });
+
+// Also run on window resize
+window.addEventListener('resize', adjustBrandTitleSize);
+</script>
 </body>
 </html>
